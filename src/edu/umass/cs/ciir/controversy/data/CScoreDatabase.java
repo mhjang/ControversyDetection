@@ -23,36 +23,43 @@ public class CScoreDatabase {
     HashMap<String, Double> cscoreDB;
     public CScoreDatabase() throws IOException {
         cscoreDB = new HashMap<String, Double>();
-        String dir = "/home/mhjang/IdeaProjects/ControversyDetectionCIKM/resource/CScore.txt";
+        String dir = "/home/mhjang/IdeaProjects/ControversyDetectionCIKM/resource/cscore_full.txt";
         SimpleFileReader sr = new SimpleFileReader(dir);
         while(sr.hasMoreLines()) {
             String line = sr.readLine();
             String[] tokens = line.split("\t");
             Double score = Double.parseDouble(tokens[1]);
             String word = tokens[0];
-            cscoreDB.put(word, score);
+            cscoreDB.put(word.toLowerCase(), score);
         }
     }
 
 
-    public void computeScore(HashMap<String, Double> info, ArrayList<String> wikidocs, int votingMethod) {
-        double finalScore = 0.0;
+    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK) {
+        Double finalScore = 0.0;
+        String maxPage = null;
+
 
         if(votingMethod == ScoringMethod.MAX) {
-            for (String wiki : wikidocs) {
+            for (String wiki : wikidocs.subList(0, Math.min(topK, wikidocs.size()))) {
                 double score = getScore(wiki);
-                if(finalScore < score)
+                System.out.println(info.get("qid") + "\t" + wiki + "\t" + score);
+                if(finalScore < score) {
                     finalScore = score;
+                    maxPage = wiki;
+                }
             }
+            info.put("CScoreMaxPage", maxPage);
         }
         else { // votingMethod == ScoringMethod.AVG
-            for (String wiki : wikidocs) {
+            for (String wiki : wikidocs.subList(0, Math.min(topK, wikidocs.size()))) {
                 double score = getScore(wiki);
                 finalScore += score;
+
             }
             finalScore /= (double)(wikidocs.size());
         }
-        info.put("CScore", finalScore);
+        info.put("CScore", finalScore.toString());
 
     }
     private Double getScore(String word) {

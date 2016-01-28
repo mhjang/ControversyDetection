@@ -8,6 +8,8 @@ public class Info {
     public static String COVERED_ARTICLE_SCORE_MAX = "Max score of covered articles";
     public static String COVERED_ARTICLE_SCORE_AVG = "Avg score of covered articles";
 
-    public static String SCORING_AVG = "avg";
-    public static String SCORING_MAX = "max";
+    public static String ORACLE_SCORING_AVG = "avg";
+    public static String ORACLE_SCORING_MAX = "max";
+    public static String ORACLE_SCORING_MIN = "min";
+
 }

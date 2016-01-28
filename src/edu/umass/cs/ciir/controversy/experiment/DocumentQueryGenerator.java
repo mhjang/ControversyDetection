@@ -169,8 +169,9 @@ public class DocumentQueryGenerator {
             Multiset<String> docTermBag = HashMultiset.create();
 
             for (String t : queryDoc.terms) {
-                if (!sr.stopwords.contains(t)) {
-                    docTermBag.add(t);
+                String stemmedWord = stemmer.stem(t);
+                if (!sr.stopwords.contains(stemmedWord)) {
+                    docTermBag.add(stemmedWord);
                 }
             }
             int count = 0;

@@ -26,12 +26,13 @@ public class KNNScorer {
      * @param wikidocs
      * @return
      */
-    public HashMap<String, Double> computeScore(HashMap<String, Double> info, ArrayList<String> wikidocs) {
-        double sumScore = 0.0;
-        int coveredArticles = 0; // # of annotated articles
-        double coveredAvgScore = 0; // total of score sum only for annotated
-        double maxScore = amputatedScore;
-        double coveredMaxScore = 0.0;
+    public HashMap<String, String> computeScore(HashMap<String, String> info, ArrayList<String> wikidocs) {
+        Double sumScore = 0.0;
+        Integer coveredArticles = 0; // # of annotated articles
+        Double coveredAvgScore = 0.0; // total of score sum only for annotated
+        Double maxScore = amputatedScore;
+        Double minScore = 4.0;
+        Double coveredMaxScore = 0.0;
         for(String doc : wikidocs) {
             double score = cd.getControversyScore(doc);
             if(score > 0.0) { // it's annotated
@@ -40,6 +41,8 @@ public class KNNScorer {
                 coveredAvgScore += score;
                 if(maxScore < score)
                     maxScore = score;
+                if(minScore > score)
+                    minScore = score;
                 if(coveredMaxScore < score)
                     coveredMaxScore = score;
 
@@ -54,13 +57,14 @@ public class KNNScorer {
         else {
             coveredAvgScore = 0.0;
         }
-        double avgScore = sumScore / (double)(wikidocs.size());
-        info.put(Info.COVERED_ARTICLE_NUM, (double)coveredArticles);
-        info.put(Info.COVERED_ARTICLE_SCORE_AVG, (double)coveredAvgScore);
-        info.put(Info.COVERED_ARTICLE_SCORE_MAX, (double)coveredMaxScore);
+        Double avgScore = sumScore / (double)(wikidocs.size());
+        info.put(Info.COVERED_ARTICLE_NUM, coveredArticles.toString());
+        info.put(Info.COVERED_ARTICLE_SCORE_AVG, coveredAvgScore.toString());
+        info.put(Info.COVERED_ARTICLE_SCORE_MAX, coveredMaxScore.toString());
 
-        info.put(Info.SCORING_AVG, avgScore);
-        info.put(Info.SCORING_MAX, maxScore);
+        info.put(Info.ORACLE_SCORING_AVG, avgScore.toString());
+        info.put(Info.ORACLE_SCORING_MAX, maxScore.toString());
+        info.put(Info.ORACLE_SCORING_MIN, minScore.toString());
         return info;
     }
 }

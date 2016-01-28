@@ -21,7 +21,7 @@ public class AnnotationDatabase {
                 String[] tokens = line.split("\t");
                 String wikiTitle = tokens[3].substring(tokens[3].lastIndexOf('/')+1);
   //              System.out.println(wikiTitle + "\t" + tokens[5]);
-                controversyDB.put(wikiTitle, Integer.parseInt(tokens[5]));
+                controversyDB.put(wikiTitle.toLowerCase(), Integer.parseInt(tokens[5]));
             }
         }
     }
