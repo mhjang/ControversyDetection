@@ -1,7 +1,6 @@
 package edu.umass.cs.ciir.controversy.data;
 
 import edu.umass.cs.ciir.controversy.utils.SimpleFileReader;
-import org.lemurproject.galago.core.parse.WikiParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;

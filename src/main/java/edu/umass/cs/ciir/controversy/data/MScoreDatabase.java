@@ -2,6 +2,9 @@ package edu.umass.cs.ciir.controversy.data;
 
 import edu.umass.cs.ciir.controversy.Scorer.ScoringMethod;
 import edu.umass.cs.ciir.controversy.utils.SimpleFileReader;
+import org.lemurproject.galago.core.btree.simple.DiskMapReader;
+import org.lemurproject.galago.tupleflow.Utility;
+import org.lemurproject.galago.utility.ByteUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,9 +15,19 @@ import java.util.HashMap;
  */
 public class MScoreDatabase {
     HashMap<String, Double> mscoreDB;
-    public MScoreDatabase() throws IOException {
+    DiskMapReader reader;
+
+    DiskMapReader revisedReader;
+    boolean revise = false;
+
+    public MScoreDatabase(boolean r) throws IOException {
+        reader = new DiskMapReader(DataPath.MSCORE);
+        this.revise = r;
+        if(this.revise)
+            revisedReader = new DiskMapReader(DataPath.REVISED_CLIQUE_MSCORE);
+
+        /*
         mscoreDB = new HashMap<String, Double>();
-        String dir = "/home/mhjang/IdeaProjects/ControversyDetectionCIKM/resource/MScore.txt";
         SimpleFileReader sr = new SimpleFileReader(dir);
         while(sr.hasMoreLines()) {
             String line = sr.readLine();
@@ -23,6 +36,7 @@ public class MScoreDatabase {
             String word = tokens[1];
             mscoreDB.put(word.toLowerCase(), score);
         }
+        */
     }
 
 
@@ -53,8 +67,13 @@ public class MScoreDatabase {
 
 
     public Double getScore(String word) {
-        if(mscoreDB.containsKey(word))
-            return mscoreDB.get(word);
+        if(revise) {
+            if(revisedReader.containsKey(ByteUtil.fromString(word))) {
+                return Utility.toDouble(revisedReader.get(ByteUtil.fromString(word)));
+            }
+        }
+        if(reader.containsKey(ByteUtil.fromString(word)))
+            return Utility.toDouble(reader.get(ByteUtil.fromString(word)));
         else
             return 0.0;
     }

@@ -1,0 +1,20 @@
+{
+"id":1",
+"dataset":"clueweb",
+"runTile":true,
+"runManual":false,
+"experiment":[{"tiled": [
+               {
+                "weighted":true,
+                "tf_tile":false,
+                "tf_include":3,
+               }]}],
+"querysize":"10",
+"expDir":"C:\\Users\\mhjang\\IdeaProjects\\WikiLinking2\\exp",
+"retrieved":20,
+"data":"C:\\Users\\mhjang\\Desktop\\data300\\pages_tiled",
+"aggregation":"additive",
+}
+
+
+

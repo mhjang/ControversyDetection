@@ -76,7 +76,7 @@ public class StrUtil {
     if(input.length() < len) {
       return input;
     } else {
-      return input.substring(0, len-2)+"..";
+      return input.substring(0, len-2)+ "src/main";
     }
   }
 

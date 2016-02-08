@@ -14,9 +14,8 @@ import java.util.HashSet;
  */
 public class DScoreDatabase {
     HashSet<String> dscoreDB;
-    public DScoreDatabase() throws IOException {
+    public DScoreDatabase(String dir) throws IOException {
         dscoreDB = new HashSet<String>();
-        String dir = "/home/mhjang/IdeaProjects/ControversyDetectionCIKM/resource/all-4sets-titlesDisputed.txt";
         SimpleFileReader sr = new SimpleFileReader(dir);
         while(sr.hasMoreLines()) {
             String line = sr.readLine();

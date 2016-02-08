@@ -1,0 +1,9 @@
+id: # of experiment run
+dataset: "clueweb" or "genweb"
+querygen: "all", "tf10", "tile"
+k: integer, 1 - 20. # of k in KNN neighbors
+revised: boolean, are we using revised score or not. True: use, False: not use
+threshold_C: threshold for C Score
+threshold_M: threshold for M Score
+aggregation: "max" or "avg"
+voting: "C", "M", "D", "majority", "AND", "OR", "D_CM"

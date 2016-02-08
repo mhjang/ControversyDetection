@@ -1,9 +1,5 @@
 package edu.umass.cs.ciir.controversy.experiment;
 
-import Clustering.Document;
-import Clustering.DocumentCollection;
-import TeachingDocParser.Tokenizer;
-import TermScoring.TFIDF.TFIDFCalculator;
 import com.google.common.collect.*;
 import edu.umass.cs.ciir.controversy.utils.DirectoryManager;
 import edu.umass.cs.ciir.controversy.utils.SimpleFileReader;
@@ -12,10 +8,7 @@ import org.lemurproject.galago.core.parse.TagTokenizer;
 import org.lemurproject.galago.core.parse.stem.KrovetzStemmer;
 import org.lemurproject.galago.core.retrieval.ScoredDocument;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.*;
 
 /*

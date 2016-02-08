@@ -1,31 +1,35 @@
-package edu.umass.cs.ciir.controversy.Scorer;
+package edu.umass.cs.ciir.controversy.data;
 
-import edu.umass.cs.ciir.controversy.data.AnnotationDatabase;
 import edu.umass.cs.ciir.controversy.experiment.Info;
+import edu.umass.cs.ciir.controversy.utils.SimpleFileReader;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
  * Created by mhjang on 12/18/15.
  */
-public class KNNScorer {
-    AnnotationDatabase cd;
-
-
-    /**
-     * The default score value to put in to the wikipage that was not annotated
-     */
+public class AnnotationDatabase {
+    HashMap<String, Integer> controversyDB;
+    HashMap<String, Double> info;
     double amputatedScore = 2.5;
-    public KNNScorer(AnnotationDatabase cd_) {
-        this.cd = cd_;
+
+    public AnnotationDatabase() throws IOException {
+        controversyDB = new HashMap<String, Integer>();
+        info = new HashMap<String, Double>();
+        SimpleFileReader sr = new SimpleFileReader("/home/mhjang/IdeaProjects/ControversyDetectionCIKM/resource/url_rating.txt");
+        while(sr.hasMoreLines()) {
+            String line = sr.readLine();
+            if(line.contains("wiki")) {
+                String[] tokens = line.split("\t");
+                String wikiTitle = tokens[3].substring(tokens[3].lastIndexOf('/')+1);
+  //              System.out.println(wikiTitle + "\t" + tokens[5]);
+                controversyDB.put(wikiTitle.toLowerCase(), Integer.parseInt(tokens[5]));
+            }
+        }
     }
 
-    /**
-     * compute the aggregated controversy score from annotated wikipedia pages
-     * @param wikidocs
-     * @return
-     */
     public HashMap<String, String> computeScore(HashMap<String, String> info, ArrayList<String> wikidocs) {
         Double sumScore = 0.0;
         Integer coveredArticles = 0; // # of annotated articles
@@ -34,7 +38,7 @@ public class KNNScorer {
         Double minScore = 4.0;
         Double coveredMaxScore = 0.0;
         for(String doc : wikidocs) {
-            double score = cd.getControversyScore(doc);
+            double score = getControversyScore(doc);
             if(score > 0.0) { // it's annotated
                 sumScore += score;
                 coveredArticles++;
@@ -66,5 +70,21 @@ public class KNNScorer {
         info.put(Info.ORACLE_SCORING_MAX, maxScore.toString());
         info.put(Info.ORACLE_SCORING_MIN, minScore.toString());
         return info;
+    }
+
+    /**
+     * return -1 if the wiki title doesn't exist in the annotated articles
+     * @param wikiTitle
+     * @return
+     */
+    public int getControversyScore(String wikiTitle) {
+        // # of annotated articles
+        int coveredArticle = 0;
+        double coveredArticleSum = 0.0;
+        if(controversyDB.containsKey(wikiTitle)) {
+            int score = controversyDB.get(wikiTitle);
+            return score;
+        }
+        else return -1;
     }
 }

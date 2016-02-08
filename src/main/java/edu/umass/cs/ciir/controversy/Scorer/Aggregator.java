@@ -11,7 +11,7 @@ public class Aggregator {
         this.param = p;
     }
 
-    public void aggregate(HashMap<String, String> info) {
+    public void aggregateAndClassify(HashMap<String, String> info) {
         Integer isControversial = 0;
         if(param.aggregationMethod == AggregationParameter.AGGREGATION_M) {
             if (Double.parseDouble(info.get("MScore")) >= param.MScoreThreshold)

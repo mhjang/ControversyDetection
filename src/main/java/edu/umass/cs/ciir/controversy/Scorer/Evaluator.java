@@ -27,9 +27,10 @@ public class Evaluator {
 
     HashMap<String, Double> controveryGoldstandard;
 
-    public Evaluator(int scoring) throws IOException {
-        String dir;
+    public Evaluator(int scoring, String dir) throws IOException {
         controveryGoldstandard = new HashMap<String, Double>();
+
+        /*
         if(scoring == MAX_RATING) {
             dir = DataPath.GOLDSTANDARD_TOPIC_MAX;
         }
@@ -37,6 +38,7 @@ public class Evaluator {
             dir = DataPath.GOLDSTANDARD_TOPIC_MIN;
         else
             dir = DataPath.GOLDSTANDARD_TOPIC_AVG;
+         */
         SimpleFileReader sr = new SimpleFileReader(dir);
         while(sr.hasMoreLines()) {
             String line  = sr.readLine();
@@ -135,11 +137,16 @@ public class Evaluator {
         double allTruthBaseLine = 0;
         int allTruthBaselineDenom = 0, allTruthBaseLinePositive = 0;
 
+        int tp=0, tn=0, fp=0, fn=0, p=0;
+        int numOfTruth = 0;
+        int N = pageList.size();
+
         Collections.sort(pageList, ALPHABETICAL_ORDER);
         for (String docName : pageList) {
             if (controveryGoldstandard.containsKey(docName)) {
                 HashMap<String, String> info = result.get(docName);
 
+                // 1: Controversial   0: Non-controversial
                 if (Integer.parseInt(info.get("prediction")) == 0) // 0
                     prediction = false;
                 else
@@ -147,28 +154,24 @@ public class Evaluator {
 
                 if (controveryGoldstandard.get(docName) >= 2.5)
                     truth = false;
-                else
+                else {
                     truth = true;
-
-                if (prediction == true) {
-                    precisionDenom++;
-                    if (truth == true) {
-                        truePositive++;
-                    }
+                    numOfTruth++;
                 }
-                if (truth == true)
-                    recallDenom++;
 
-                allTruthBaselineDenom++;
-                if(truth == true)
-                    allTruthBaseLinePositive++;
+                if(prediction) {
+                    if(truth) tp++;
+                    else fp++;
+                }
+                else {
+                    if(truth) fn++;
+                    else tn++;
+                }
 
+                double mscore = Double.parseDouble(info.get("MScore"));
+                double cscore = Double.parseDouble(info.get("CScore"));
 
-                    // for debugging purposes
-                    double mscore = Double.parseDouble(info.get("MScore"));
-                    double cscore = Double.parseDouble(info.get("CScore"));
-
-                    System.out.println(docName + "\t" + info.get("MScoreMaxPage") + "\t" + mscore + "\t" +
+                System.out.println(docName + "\t" + info.get("MScoreMaxPage") + "\t" + mscore + "\t" +
                          info.get("CScoreMaxPage") + "\t" + cscore + "\t" + info.get("number of relevant oracle docs") +"\t" +(prediction?"1":"0")+ "\t"+ (truth?"1":"0") + "\t" + (prediction==truth));
 
 
@@ -177,19 +180,31 @@ public class Evaluator {
       //                      cscore + "\t" + ((cscore > param.CScoreThreshold) ? "O" : "X") + "\t" + info.get("number of relevant oracle docs") + "\t" + prediction + "\t" + truth);
                 }
             }
-            //   System.out.println("Binary Classifciaton Judgments: " + (double)(correct)/(double)(correct + wrong) * 100 + "% (" + correct + " pages / " + (correct + wrong) + " pages");
-            double precision = (double) truePositive / (double) precisionDenom;
-            double recall = (double) truePositive / (double) recallDenom;
-            double f1 = precision * recall * 2 / (precision + recall);
 
-            double allTruthBaselinePrecision = (double) allTruthBaseLinePositive/ (double) allTruthBaselineDenom;
-            double allTruthBaselineRecall  = 1.0;
+
+            double recall = (double)(tp) / (double)(tp + fn);
+            double precision = (double)(tp) / (double)(tp + fp);
+            double specificity = (double)(tn) / (double)(tn + fn);
+            double accuracy = (double)(tp + tn) / (double)(N);
+            double f1 = precision * recall * 2 / (precision + recall);
+            double f_half = (1 + 0.5*0.5)*(precision * recall) / ((0.5*0.5*precision) + recall);
+
+
+            double allTruthBaselinePrecision = (double)(numOfTruth) / (double)(N);
+            double allTruthBaselineRecall  = (double)(numOfTruth) / (double)(numOfTruth);
+            double allTruthBaselineSpecificity = 0.0;
+            double allTruthBaselineAccuracy = allTruthBaselinePrecision;
             double allTruthF1 = allTruthBaselinePrecision * allTruthBaselineRecall * 2 / (allTruthBaselinePrecision + allTruthBaselineRecall);
+            double allTruthBaselineF_half = (1 + 0.5*0.5)*(allTruthBaselinePrecision * allTruthBaselineRecall) / ((0.5*0.5*allTruthBaselinePrecision) + allTruthBaselineRecall);
 
         //       System.out.println(truePositive + "\t" + precisionDenom + "\t" + recallDenom);
-            System.out.println("Truth Baseline Precision \t" + allTruthBaselinePrecision + "\t Recall \t" + allTruthBaselineRecall + "\t F1-measure \t" + allTruthF1);
-            System.out.println("Precision \t" + precision + "\t Recall \t" + recall + "\t F1-measure \t" + f1);
-        }
+        System.out.println("# of truth \t" + numOfTruth);
+        System.out.println("Prec. \t Recall \t Accuracy \t Specificity \t F1 \t F_0.5");
+        System.out.println(precision + "\t" + recall + "\t" + accuracy + "\t" + specificity + "\t" + f1 + "\t" + f_half);
+        System.out.println(allTruthBaselinePrecision + "\t" + allTruthBaselineRecall + "\t" + allTruthBaselineSpecificity + "\t" + allTruthBaselineAccuracy + "\t" + allTruthF1 + "\t" + allTruthBaselineF_half);
+
+
+    }
 
     }
 
