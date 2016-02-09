@@ -1,7 +1,8 @@
 package edu.umass.cs.ciir.controversy.data;
 
-import edu.umass.cs.ciir.controversy.Scorer.ScoringMethod;
-import edu.umass.cs.ciir.controversy.utils.SimpleFileReader;
+import edu.umass.cs.ciir.controversy.Scorer.Aggregator;
+import edu.umass.cs.ciir.controversy.experiment.OutputControversyScores;
+import edu.umass.cs.ciir.controversy.utils.SimpleFileWriter;
 import org.lemurproject.galago.core.btree.simple.DiskMapReader;
 import org.lemurproject.galago.tupleflow.Utility;
 import org.lemurproject.galago.utility.ByteUtil;
@@ -19,12 +20,20 @@ public class MScoreDatabase {
 
     DiskMapReader revisedReader;
     boolean revise = false;
+    SimpleFileWriter logWriter;
 
-    public MScoreDatabase(boolean r) throws IOException {
+    public MScoreDatabase(boolean r, int networkOption, SimpleFileWriter logWriter_) throws IOException {
         reader = new DiskMapReader(DataPath.MSCORE);
         this.revise = r;
-        if(this.revise)
-            revisedReader = new DiskMapReader(DataPath.REVISED_CLIQUE_MSCORE);
+        logWriter = logWriter_;
+
+        if (this.revise) {
+            if (networkOption == OutputControversyScores.CLIQUE_BASED_NETWORK)
+                revisedReader = new DiskMapReader(DataPath.REVISED_CLIQUE_MSCORE);
+            else
+                revisedReader = new DiskMapReader(DataPath.REVISED_PAIR_MSCORE);
+        }
+
 
         /*
         mscoreDB = new HashMap<String, Double>();
@@ -40,12 +49,19 @@ public class MScoreDatabase {
     }
 
 
-    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK) {
+    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
+    throws IOException {
         Double finalScore = 0.0;
 
         String maxPage = null;
-        if(votingMethod == ScoringMethod.MAX) {
-            for (String wiki : wikidocs.subList(0, Math.min(topK, wikidocs.size()))) {
+
+        if(wikidocs.size() < topK) {
+            logWriter.writeLine(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
+            topK = wikidocs.size();
+        }
+
+        if(votingMethod == Aggregator.MAX) {
+            for (String wiki : wikidocs.subList(0, topK)) {
                 double score = getScore(wiki);
                 if(finalScore < score) {
                     finalScore = score;
@@ -54,8 +70,8 @@ public class MScoreDatabase {
             }
             info.put("MScoreMaxPage", maxPage);
         }
-        else { // votingMethod == ScoringMethod.AVG
-            for (String wiki : wikidocs.subList(0, Math.min(topK, wikidocs.size()))) {
+        else { // votingMethod == Aggregator.AVG
+            for (String wiki : wikidocs.subList(0, topK)) {
                 double score = getScore(wiki);
                 finalScore += score;
             }

@@ -1,19 +1,15 @@
 package edu.umass.cs.ciir.controversy.data;
 
-import edu.umass.cs.ciir.controversy.Scorer.ScoringMethod;
-import edu.umass.cs.ciir.controversy.utils.*;
+import edu.umass.cs.ciir.controversy.Scorer.Aggregator;
+import edu.umass.cs.ciir.controversy.experiment.OutputControversyScores;
+import edu.umass.cs.ciir.controversy.utils.SimpleFileWriter;
 import org.lemurproject.galago.core.btree.simple.DiskMapReader;
-import org.lemurproject.galago.core.btree.simple.DiskMapSortedBuilder;
 import org.lemurproject.galago.tupleflow.Utility;
 import org.lemurproject.galago.utility.ByteUtil;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.StringTokenizer;
 
 /**
  * Created by mhjang on 12/20/15.
@@ -23,13 +19,17 @@ public class CScoreDatabase {
     DiskMapReader reader;
     DiskMapReader revisedReader;
     boolean revise = false;
-
-    public CScoreDatabase(boolean r) throws IOException {
+    SimpleFileWriter logWriter;
+    public CScoreDatabase(boolean r, int networkOption, SimpleFileWriter logWriter_) throws IOException {
         reader = new DiskMapReader(DataPath.CSCORE);
+        logWriter = logWriter_;
         this.revise = r;
-        if(this.revise)
-            revisedReader = new DiskMapReader(DataPath.REVISED_CLIQUE_CSCORE);
-
+        if(this.revise) {
+            if (networkOption == OutputControversyScores.CLIQUE_BASED_NETWORK)
+                revisedReader = new DiskMapReader(DataPath.REVISED_CLIQUE_CSCORE);
+            else
+                revisedReader = new DiskMapReader(DataPath.REVISED_PAIR_CSCORE);
+        }
 /*      Constructing hashmap, but this is replaced with index file
 
         cscoreDB = new HashMap<String, Double>();
@@ -45,15 +45,19 @@ public class CScoreDatabase {
     }
 
 
-    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK) {
+    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
+    throws IOException {
         Double finalScore = 0.0;
         String maxPage = null;
 
 
-        if(votingMethod == ScoringMethod.MAX) {
-            for (String wiki : wikidocs.subList(0, Math.min(topK, wikidocs.size()))) {
+        if(wikidocs.size() < topK) {
+            logWriter.writeLine(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
+            topK = wikidocs.size();
+        }
+        if(votingMethod == Aggregator.MAX) {
+            for (String wiki : wikidocs.subList(0, topK)) {
                 double score = getScore(wiki);
-        //        System.out.println(info.get("qid") + "\t" + wiki + "\t" + score);
                 if(finalScore < score) {
                     finalScore = score;
                     maxPage = wiki;
@@ -61,15 +65,16 @@ public class CScoreDatabase {
             }
             info.put("CScoreMaxPage", maxPage);
         }
-        else { // votingMethod == ScoringMethod.AVG
-            for (String wiki : wikidocs.subList(0, Math.min(topK, wikidocs.size()))) {
+        else if(votingMethod == Aggregator.AVG) {
+            for (String wiki : wikidocs.subList(0, topK)) {
                 double score = getScore(wiki);
                 finalScore += score;
 
             }
-            finalScore /= (double)(wikidocs.size());
+            finalScore /= (double)(topK);
         }
         info.put("CScore", finalScore.toString());
+
 
     }
     private Double getScore(String word) {

@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 
 /**
@@ -23,7 +24,7 @@ public class BuildIndex {
     }
 
     public static void testIndex() throws IOException {
-        DiskMapReader reader = new DiskMapReader("/home/mhjang/controversy_Data/datasets/resources/title_imputed.count");
+        DiskMapReader reader = new DiskMapReader(DataPath.MSCORE);
         System.out.println(reader.containsKey(ByteUtil.fromString("abortion")));
 
         System.out.println(Utility.toDouble((reader.get(ByteUtil.fromString("abortion")))));
@@ -35,19 +36,18 @@ public class BuildIndex {
              * building a B-tree index
              ******************************/
 
-            DiskMapBuilder dmb = new DiskMapBuilder("/home/mhjang/controversy_Data/datasets/resources/clique_revised_MSCORE.index");
-            String fileName = "/home/mhjang/controversy_Data/datasets/resources/clique_revised.MSCORE";
+            DiskMapBuilder dmb = new DiskMapBuilder("/home/mhjang/controversy_Data/datasets/resources/CScore_pair.index");
+            String fileName = "/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork/revised.CSCORE";
             BufferedReader br = new BufferedReader(new FileReader(new File(fileName)));
             String line = null;
+
             while((line = br.readLine()) != null) {
                 try{
                     StringTokenizer st = new StringTokenizer(line, "\t");
                     String title = st.nextToken().toLowerCase();
-                    Double score = Double.parseDouble(st.nextToken());
-
+                    byte[] score = Utility.fromDouble(Double.parseDouble(st.nextToken()));
                     byte[] ngram = ByteUtil.fromString(title);
-                    byte[] frequency = Utility.fromDouble(score);
-                    dmb.put(ngram, frequency);
+                    dmb.put(ngram, score);
                 } catch(NumberFormatException e) {
                     System.out.println(line);
                     e.printStackTrace();

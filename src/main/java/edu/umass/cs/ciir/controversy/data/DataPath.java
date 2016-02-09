@@ -22,12 +22,12 @@ public interface DataPath {
 /*** Resources ****/
 	public static String CSCORE = "/home/mhjang/controversy_Data/datasets/resources/CScore_lower.index";
 	public static String MSCORE = "/home/mhjang/controversy_Data/datasets/resources/MScore_lower.index";
-	public static String DSCORE = "/home/mhjang/controversy_Data/datasets/resources/DScore.txt";
+	public static String DSCORE = "/home/mhjang/controversy_Data/datasets/resources/DScore_lower.index";
 	public static String REVISION_CNT = "/home/mhjang/controversy_Data/datasets/resources/revision_count.index";
-	public static String REVISED_CLIQUE_CSCORE = "/home/mhjang/controversy_Data/datasets/resources/clique_revised_CSCORE.index";
-	public static String REVISED_PAIR_CSCORE = "/home/mhjang/controversy_Data/datasets/resources/pair_revised_CSCORE.index";
-	public static String REVISED_CLIQUE_MSCORE = "/home/mhjang/controversy_Data/datasets/resources/clique_revised_MSCORE.index";
-	public static String REVISED_PAIR_MSCORE = "/home/mhjang/controversy_Data/datasets/resources/pair_revised_MSCORE.index";
+	public static String REVISED_CLIQUE_CSCORE = "/home/mhjang/controversy_Data/datasets/resources/CScore_clique.index";
+	public static String REVISED_PAIR_CSCORE = "/home/mhjang/controversy_Data/datasets/resources/CScore_pair.index";
+	public static String REVISED_CLIQUE_MSCORE = "/home/mhjang/controversy_Data/datasets/resources/MScore_clique.index";
+	public static String REVISED_PAIR_MSCORE = "/home/mhjang/controversy_Data/datasets/resources/MScore_pair.index";
 
 
 	/** Judgments ***/

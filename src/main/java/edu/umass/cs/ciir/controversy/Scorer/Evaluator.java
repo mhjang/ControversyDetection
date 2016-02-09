@@ -1,6 +1,5 @@
 package edu.umass.cs.ciir.controversy.Scorer;
 
-import edu.umass.cs.ciir.controversy.data.DataPath;
 import edu.umass.cs.ciir.controversy.experiment.Info;
 import edu.umass.cs.ciir.controversy.utils.SimpleFileReader;
 
@@ -14,20 +13,11 @@ import java.util.HashMap;
  * Created by mhjang on 12/20/15.
  */
 public class Evaluator {
-    /**
-     * for the ratings rated by more than one annotator, we will take
-     * 1. MAX: less controversial
-     * 2. MIN: more controversial
-     * 3. Average
-     * rating
-     */
-    public static int MAX_RATING= 1;
-    public static int MIN_RATING = 2;
-    public static int AVG_RATING = 3;
+
 
     HashMap<String, Double> controveryGoldstandard;
 
-    public Evaluator(int scoring, String dir) throws IOException {
+    public Evaluator(String dir) throws IOException {
         controveryGoldstandard = new HashMap<String, Double>();
 
         /*
@@ -123,25 +113,22 @@ public class Evaluator {
      * for oracle experiment
      * @param result
      */
-    public void binaryAutomaticEvaluate(HashMap<String, HashMap<String, String>> result, AggregationParameter param) {
+    public HashMap<String, Double> binaryAutomaticEvaluate(HashMap<String, HashMap<String, String>> result, boolean debug) {
         boolean prediction, truth;
-        int truePositive = 0;
-        int precisionDenom = 0, recallDenom = 0;
-        System.out.println("querypage \t MScoreMaxPage \t Max_MScore \t Controversial? \t CScoreMaxPage \t Max_CScore \t Controversial? \t # of Rel Docs \t FinalResult \t ground_truth");
+        if(debug)
+         System.out.println("querypage \t MScoreMaxPage \t Max_MScore \t Controversial? \t CScoreMaxPage \t Max_CScore \t Controversial? \t # of Rel Docs \t FinalResult \t ground_truth");
 
 
 
 
 
         ArrayList<String> pageList = new ArrayList<String>(result.keySet());
-        double allTruthBaseLine = 0;
-        int allTruthBaselineDenom = 0, allTruthBaseLinePositive = 0;
-
         int tp=0, tn=0, fp=0, fn=0, p=0;
         int numOfTruth = 0;
         int N = pageList.size();
 
-        Collections.sort(pageList, ALPHABETICAL_ORDER);
+        if(debug)
+            Collections.sort(pageList, ALPHABETICAL_ORDER);
         for (String docName : pageList) {
             if (controveryGoldstandard.containsKey(docName)) {
                 HashMap<String, String> info = result.get(docName);
@@ -171,8 +158,9 @@ public class Evaluator {
                 double mscore = Double.parseDouble(info.get("MScore"));
                 double cscore = Double.parseDouble(info.get("CScore"));
 
-                System.out.println(docName + "\t" + info.get("MScoreMaxPage") + "\t" + mscore + "\t" +
-                         info.get("CScoreMaxPage") + "\t" + cscore + "\t" + info.get("number of relevant oracle docs") +"\t" +(prediction?"1":"0")+ "\t"+ (truth?"1":"0") + "\t" + (prediction==truth));
+                if(debug)
+                    System.out.println(docName + "\t" + info.get("MScoreMaxPage") + "\t" + mscore + "\t" +
+                         info.get("CScoreMaxPage") + "\t" + cscore + "\t" + info.get("number of relevant oracle docs") +"\t" +(prediction?"Controversial":"Non-Controversial")+ "\t"+ (truth?"Controversial":"Non-Controversial") + "\t" + (prediction==truth));
 
 
     //                System.out.println(docName + "\t" + info.get("MScoreMaxPage") + "\t" + mscore + "\t" +
@@ -181,12 +169,13 @@ public class Evaluator {
                 }
             }
 
+            System.out.println(tp + "\t" + tn + "\t" + fp + "\t" + fn);
 
             double recall = (double)(tp) / (double)(tp + fn);
             double precision = (double)(tp) / (double)(tp + fp);
             double specificity = (double)(tn) / (double)(tn + fn);
             double accuracy = (double)(tp + tn) / (double)(N);
-            double f1 = precision * recall * 2 / (precision + recall);
+            double f1 = (precision * recall * 2) / (precision + recall);
             double f_half = (1 + 0.5*0.5)*(precision * recall) / ((0.5*0.5*precision) + recall);
 
 
@@ -198,12 +187,22 @@ public class Evaluator {
             double allTruthBaselineF_half = (1 + 0.5*0.5)*(allTruthBaselinePrecision * allTruthBaselineRecall) / ((0.5*0.5*allTruthBaselinePrecision) + allTruthBaselineRecall);
 
         //       System.out.println(truePositive + "\t" + precisionDenom + "\t" + recallDenom);
-        System.out.println("# of truth \t" + numOfTruth);
-        System.out.println("Prec. \t Recall \t Accuracy \t Specificity \t F1 \t F_0.5");
-        System.out.println(precision + "\t" + recall + "\t" + accuracy + "\t" + specificity + "\t" + f1 + "\t" + f_half);
-        System.out.println(allTruthBaselinePrecision + "\t" + allTruthBaselineRecall + "\t" + allTruthBaselineSpecificity + "\t" + allTruthBaselineAccuracy + "\t" + allTruthF1 + "\t" + allTruthBaselineF_half);
+     //   System.out.println("# of truth \t" + numOfTruth);
 
+        HashMap<String, Double> performance = new HashMap<String, Double>();
+        performance.put("precision", precision);
+        performance.put("recall", recall);
+        performance.put("accuracy", accuracy);
+        performance.put("specificity", specificity);
+        performance.put("f_1", f1);
+        performance.put("f_half", f_half);
 
+        if(debug) {
+            System.out.println("Prec. \t Recall \t Accuracy \t Specificity \t F1 \t F_0.5");
+            System.out.println(precision + "\t" + recall + "\t" + accuracy + "\t" + specificity + "\t" + f1 + "\t" + f_half);
+            System.out.println(allTruthBaselinePrecision + "\t" + allTruthBaselineRecall + "\t" + allTruthBaselineSpecificity + "\t" + allTruthBaselineAccuracy + "\t" + allTruthF1 + "\t" + allTruthBaselineF_half);
+        }
+        return performance;
     }
 
     }

@@ -61,13 +61,14 @@ public class NetworkInferredScore {
     }
 
     public static void reviseScore() throws IOException {
-        System.setOut(new PrintStream(new FileOutputStream("/home/mhjang/controversy_Data/datasets/expresults/pairbasednetwork/clique_revised.MSCORE")));
+        System.setOut(new PrintStream(new FileOutputStream("/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork/revised.MSCORE")));
 
-        SimpleFileReader sr = new SimpleFileReader("/home/mhjang/controversy_Data/datasets/resources/pairbasedneighbors.txt");
-        System.out.println("Query \t #_of_Neighbors \t Original_Score \t Revised_Score \t MostInfluential");
+        SimpleFileReader sr = new SimpleFileReader("/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork.txt");
+  //      System.out.println("Query \t #_of_Neighbors \t Original_Score \t Revised_Score \t MostInfluential");
         while(sr.hasMoreLines()) {
             String line = sr.readLine();
             String[] tokens = line.split("\t");
+     //       System.out.println(line);
             int revisionCount = getRevisionScore(tokens[0]);
             WikiNode queryNode = new WikiNode(tokens[0], revisionCount, getCScore(tokens[0]));
             ArrayList<WikiNode> influentialNeighbors = new ArrayList<WikiNode>();
@@ -90,8 +91,8 @@ public class NetworkInferredScore {
             for(WikiNode w : influentialNeighbors) {
                 revisedScore += (double)(w.score)*(double)(w.revisionCount)/(double)(revisionSum);
             }
-            System.out.println(queryNode.title + "(" + queryNode.revisionCount + ", " + queryNode.score + ") \t" + influentialNeighbors.size() + "\t" + queryNode.score + "\t" + revisedScore + "\t" + mostInfluential.title + "(" + mostInfluential.revisionCount + ", " + mostInfluential.score + ")");
-        //    System.out.println(queryNode.title + "\t" + revisedScore);
+        //    System.out.println(queryNode.title + "(" + queryNode.revisionCount + ", " + queryNode.score + ") \t" + influentialNeighbors.size() + "\t" + queryNode.score + "\t" + revisedScore + "\t" + mostInfluential.title + "(" + mostInfluential.revisionCount + ", " + mostInfluential.score + ")");
+            System.out.println(queryNode.title + "\t" + revisedScore);
         }
     }
 }

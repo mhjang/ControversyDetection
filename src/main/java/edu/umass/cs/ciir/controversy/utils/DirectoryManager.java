@@ -28,7 +28,7 @@ public class DirectoryManager {
 
         final File folder = new File(dir);
         filenames = new ArrayList<String>();
-        System.out.println("reading " + folder.getAbsolutePath());
+  //      System.out.println("reading " + folder.getAbsolutePath());
         this.dir = dir;
         readFiles(folder);
 
