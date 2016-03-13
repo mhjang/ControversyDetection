@@ -25,9 +25,9 @@ public class BuildIndex {
 
     public static void testIndex() throws IOException {
         DiskMapReader reader = new DiskMapReader(DataPath.MSCORE);
-        System.out.println(reader.containsKey(ByteUtil.fromString("abortion")));
+//        System.out.println(reader.containsKey(ByteUtil.fromString("\"anti-americanism\"")));
 
-        System.out.println(Utility.toDouble((reader.get(ByteUtil.fromString("abortion")))));
+        System.out.println(Utility.toDouble((reader.get(ByteUtil.fromString("anti-americanism")))));
 
     }
 
@@ -36,18 +36,24 @@ public class BuildIndex {
              * building a B-tree index
              ******************************/
 
-            DiskMapBuilder dmb = new DiskMapBuilder("/home/mhjang/controversy_Data/datasets/resources/CScore_pair.index");
-            String fileName = "/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork/revised.CSCORE";
+            DiskMapBuilder dmb = new DiskMapBuilder("/home/mhjang/controversy_Data/datasets/resources/CScore_pair_2014.index");
+            String fileName = "/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork/revised_2014.CSCORE";
             BufferedReader br = new BufferedReader(new FileReader(new File(fileName)));
             String line = null;
-
+            HashSet<String> check = new HashSet<String>();
             while((line = br.readLine()) != null) {
                 try{
                     StringTokenizer st = new StringTokenizer(line, "\t");
                     String title = st.nextToken().toLowerCase();
                     byte[] score = Utility.fromDouble(Double.parseDouble(st.nextToken()));
-                    byte[] ngram = ByteUtil.fromString(title);
-                    dmb.put(ngram, score);
+
+                    if(title.equals("anti-americanism"))
+                        System.out.println(line);
+                    if(!check.contains(title)) {
+                        byte[] ngram = ByteUtil.fromString(title);
+                        dmb.put(ngram, score);
+                    }
+                    check.add(title);
                 } catch(NumberFormatException e) {
                     System.out.println(line);
                     e.printStackTrace();

@@ -61,9 +61,9 @@ public class NetworkInferredScore {
     }
 
     public static void reviseScore() throws IOException {
-        System.setOut(new PrintStream(new FileOutputStream("/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork/revised.MSCORE")));
+        System.setOut(new PrintStream(new FileOutputStream("/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork/revised_2014.MSCORE")));
 
-        SimpleFileReader sr = new SimpleFileReader("/home/mhjang/controversy_Data/datasets/resources/pairbasednetwork.txt");
+        SimpleFileReader sr = new SimpleFileReader("/home/mhjang/controversy_Data/datasets/resources/pairnetwork_2014.txt");
   //      System.out.println("Query \t #_of_Neighbors \t Original_Score \t Revised_Score \t MostInfluential");
         while(sr.hasMoreLines()) {
             String line = sr.readLine();

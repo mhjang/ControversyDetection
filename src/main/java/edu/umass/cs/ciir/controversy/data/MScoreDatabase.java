@@ -20,12 +20,10 @@ public class MScoreDatabase {
 
     DiskMapReader revisedReader;
     boolean revise = false;
-    SimpleFileWriter logWriter;
 
-    public MScoreDatabase(boolean r, int networkOption, SimpleFileWriter logWriter_) throws IOException {
+    public MScoreDatabase(boolean r, int networkOption) throws IOException {
         reader = new DiskMapReader(DataPath.MSCORE);
         this.revise = r;
-        logWriter = logWriter_;
 
         if (this.revise) {
             if (networkOption == OutputControversyScores.CLIQUE_BASED_NETWORK)
@@ -47,7 +45,11 @@ public class MScoreDatabase {
         }
         */
     }
-
+    public void close() throws IOException {
+        reader.close();
+        if(revisedReader != null)
+            revisedReader.close();
+    }
 
     public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
     throws IOException {
@@ -56,7 +58,7 @@ public class MScoreDatabase {
         String maxPage = null;
 
         if(wikidocs.size() < topK) {
-            logWriter.writeLine(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
+            System.out.println(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
             topK = wikidocs.size();
         }
 

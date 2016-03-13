@@ -10,7 +10,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.lemurproject.galago.utility.Parameters;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 /**
  * Created by mhjang on 12/18/15.
@@ -35,6 +38,8 @@ public class OutputControversyScores {
     int votingOption; // C, M, D, majority, AND, OR, D_CM
     int aggregationOption;
     int networkOption;
+    int runextension;
+    String voting;
 
     public static int CLIQUE_BASED_NETWORK = 1;
     public static int PAIR_BASED_NETWORK = 2;
@@ -44,7 +49,7 @@ public class OutputControversyScores {
     HashMap<String, HashMap<String, String>> result;
     HashMap<String, ArrayList<String>> retrieved;
     VotingClassifer votingClassifier;
-
+    Evaluator eval;
     String[] topics;
 
     String paramFile;
@@ -54,6 +59,34 @@ public class OutputControversyScores {
         public static String TIlEQUERY = "tile";
         public static String TF10QUERY = "tf10";
     }
+
+
+    public static class TrainingTopics {
+        public static String GlobalWarming = "global_warming";
+        public static String NuclearPower = "nuclear_power";
+        public static String GayMarriage = "gay_marriage";
+        public static String VideoGame = "video_game";
+        public static String MedievalCuisine = "medieval_cusine";
+        public static String SteveJobs = "steve_jobs";
+        public static String Uranium = "uranium";
+        public static String[] all = {GlobalWarming, NuclearPower, GayMarriage, VideoGame, MedievalCuisine, SteveJobs, Uranium};
+
+    }
+
+    public static class TestTopics {
+        public static String NativeAmericans = "native_americans";
+        public static String AntiAmericanism = "anti_americanism";
+        public static String Feminism = "feminism";
+        public static String IntensiveFarming = "intensive_farming";
+        public static String BerlinWall = "berlin_wall";
+        public static String AnneFrank = "anne_frank";
+        public static String Cancer = "cancer";
+        public static String Cheese = "cheese";
+
+        public static String[] all = {NativeAmericans, AntiAmericanism, Feminism, IntensiveFarming, BerlinWall, AnneFrank, Cancer, Cheese};
+
+    }
+
     public static class ControversialTopic {
         public static String GlobalWarming = "global_warming";
         public static String NuclearPower = "nuclear_power";
@@ -80,23 +113,36 @@ public class OutputControversyScores {
 
     public static void main(String[] args) throws IOException {
 
-        String dir = "/home/mhjang/controversy_Data/datasets/expresults/params";
-        DirectoryManager dm = new DirectoryManager(dir);
-        for(String paramFile : dm.getFilePathList()) {
-            if(paramFile.endsWith(".param")) {
-                OutputControversyScores classifier = new OutputControversyScores(paramFile);
-                classifier.run();
-        //        return;
+
+        String dataset = "CLUEWEB";
+        String mode = "testParam"; // or "testParam"
+
+        String[] expDataset;
+        if(dataset.equals("CLUEWEB"))
+            expDataset = DataPath.CLUEWEB_5FOLD;
+        else
+            expDataset = DataPath.GENWEB_5FOLD;
+
+        for (int k = 1; k <= 5; k++) {
+            for (int i = 1; i <= 9; i++) {
+                String baseDir = expDataset[k-1];
+                String dir = baseDir + "params/" + i + "/" + mode;
+                DirectoryManager dm = new DirectoryManager(dir);
+                for (String paramFile : dm.getFilePathList()) {
+                    if (paramFile.endsWith(".param")) {
+                        OutputControversyScores classifier = new OutputControversyScores(baseDir, paramFile, false, k);
+                        classifier.run();
+                    }
+                }
             }
         }
     }
 
-
-    public OutputControversyScores(String p) throws IOException {
-        initialize(p);
+    public OutputControversyScores(String dataFoldDir, String p, boolean isTrain, int runset) throws IOException {
+        initialize(dataFoldDir, p, isTrain, runset);
 
     }
-    private void initialize(String paramFile) throws IOException {
+    private void initialize(String dataFoldDir, String paramFile, boolean isTrain, int runset) throws IOException {
 
         Parameters p = Parameters.parseFile(paramFile);
         System.out.println(paramFile);
@@ -107,23 +153,59 @@ public class OutputControversyScores {
 
         /******************** Dataset ***********************/
 
-        dataset = p.get("dataset", "clueweb");
+        dataset = "clueweb";
+     //   dataset = p.get("dataset", "clueweb");
 
         if(dataset.equals("clueweb")) {
             datasetDir = DataPath.CLUEWEB;
-            queryDir = datasetDir + DataPath.CLUEWEB_QUERY;
+            if(isTrain) {
+                queryDir = dataFoldDir + "train/";
+            }
+            else {
+                queryDir = dataFoldDir + "test/";
+            }
+
         }
         else if(dataset.equals("genweb")) {
             datasetDir = DataPath.GENWEB;
             queryDir = datasetDir + DataPath.GENWEB_QUERY;
+            if(isTrain) {
+                if (runset == 1) {
+                    topics = GenWebTopicFiveFold.Fold1.train;
+              //      topics = new String[]{"anti_americanism"};
+                }
+                if (runset == 2)
+                    topics = GenWebTopicFiveFold.Fold2.train;
+                if (runset == 3)
+                    topics = GenWebTopicFiveFold.Fold3.train;
+                if (runset == 4)
+                    topics = GenWebTopicFiveFold.Fold4.train;
+                if (runset == 5)
+                    topics = GenWebTopicFiveFold.Fold5.train;
+            }
+            else{
+                if (runset == 1)
+                    topics = GenWebTopicFiveFold.Fold1.test;
+                if (runset == 2)
+                    topics = GenWebTopicFiveFold.Fold2.test;
+                if (runset == 3)
+                    topics = GenWebTopicFiveFold.Fold3.test;
+                if (runset == 4)
+                    topics = GenWebTopicFiveFold.Fold4.test;
+                if (runset == 5)
+                    topics = GenWebTopicFiveFold.Fold5.test;
+            }
+
      //       topics = new String[]{ControversialTopic.Feminism, NonControversialTopic.AnneFrank};
-            topics = (String[]) ArrayUtils.addAll(ControversialTopic.all, NonControversialTopic.all);
+     //       topics = (String[]) ArrayUtils.addAll(ControversialTopic.all, NonControversialTopic.all);
+     //       topics = TestTopics.all;
         }
         else {
             System.out.println("Error! Wrong dataset parameter");
             System.out.println(dataset);
             return;
         }
+        eval = new Evaluator(datasetDir + DataPath.GOLDSTANDARD);
 
         /**************** Query Method ******************/
 
@@ -157,6 +239,7 @@ public class OutputControversyScores {
         thresold_C = Double.parseDouble(p.get("C_threshold", "0.00418"));
         threshold_M = Integer.parseInt(p.get("M_threshold", "20000"));
 
+        runextension = 1;
 
         /**************** Do we use revised score? ***********/
         revised = p.get("revised", false);
@@ -174,7 +257,7 @@ public class OutputControversyScores {
 
 
         /*************** Voting Option ***************/
-        String voting = p.get("voting", "C"); // C, M, D, majority, AND, OR, D_CM
+        voting = p.get("voting", "C"); // C, M, D, majority, AND, OR, D_CM
         if(voting == "C")
             votingOption = VotingParameter.ISOLATION_C;
         else if(voting.equals("M"))
@@ -193,16 +276,25 @@ public class OutputControversyScores {
         goldstandardDir = datasetDir + DataPath.GOLDSTANDARD;
     }
 
+    private static Comparator<String> ALPHABETICAL_ORDER = new Comparator<String>() {
+        public int compare(String str1, String str2) {
+            int res = String.CASE_INSENSITIVE_ORDER.compare(str1, str2);
+            if (res == 0) {
+                res = str1.compareTo(str2);
+            }
+            return res;
+        }
+    };
+
     public void run() throws IOException {
 
         SimpleFileWriter logWriter = new SimpleFileWriter("error.log");
-        csd = new CScoreDatabase(revised, networkOption, logWriter);
-        msd = new MScoreDatabase(revised, networkOption, logWriter);
-        dsd = new DScoreDatabase(logWriter);
+        csd = new CScoreDatabase(revised, networkOption);
+        msd = new MScoreDatabase(revised, networkOption);
+        dsd = new DScoreDatabase();
         //     and = new AnnotationDatabase();
 
 
-        Evaluator eval = new Evaluator(datasetDir + DataPath.GOLDSTANDARD);
         result = new HashMap<String, HashMap<String, String>>();
 
         retrieved = new HashMap<String, ArrayList<String>>();
@@ -215,6 +307,7 @@ public class OutputControversyScores {
                 retrieved.put(queryId, new ArrayList<String>());
             retrieved.get(queryId).add(tokens[1].toLowerCase());
         }
+        sr2.close();
 
         if (dataset.equals("genweb")) {
             for (String topic : topics) {
@@ -234,17 +327,33 @@ public class OutputControversyScores {
 
         boolean debugMode = false;
         HashMap<String, Double> performance = eval.binaryAutomaticEvaluate(result, debugMode);
+        SimpleFileWriter sw2 = new SimpleFileWriter(paramFile.replace(".param", ".output"));
+        ArrayList<String> pageList = new ArrayList<String>(result.keySet());
+        Collections.sort(pageList, ALPHABETICAL_ORDER);
+        for (String docName : pageList) {
+                HashMap<String, String> info = result.get(docName);
+                // 1: Controversial   0: Non-controversial
+                sw2.writeLine(docName + "\t" + info.get("prediction"));
+        }
+        sw2.close();
 
-        SimpleFileWriter sw = new SimpleFileWriter(paramFile.replace(".param", "") + ".result3");
+        csd.close();
+        dsd.close();
+        msd.close();
+   //     if(performance == null) return;
+
+        SimpleFileWriter sw = new SimpleFileWriter(paramFile.replace(".param", ".result")  + runextension);
         StringBuilder sb = new StringBuilder();
+        DecimalFormat df = new DecimalFormat("0.0000");
         if(!revised)
             network = "N/A";
         sb.append(runid + "\t" + querymethod + "\t" + neighborK + "\t" + revised + "\t" + network + "\t" + aggregation
-                + "\t" + thresold_C + "\t" + threshold_M + "\t" + performance.get("precision") + "\t"
-                + performance.get("recall") + "\t" + performance.get("specificity") + "\t" +
-                performance.get("f_1") + "\t" + performance.get("accuracy") + "\t" + performance.get("f_half"));
+                + "\t" + thresold_C + "\t" + threshold_M + "\t" + voting + "\t" + df.format(performance.get("precision")) + "\t"
+                + df.format(performance.get("recall")) + "\t" + df.format(performance.get("specificity")) + "\t" +
+                df.format(performance.get("f_1")) + "\t" + df.format(performance.get("f_half")) + "\t" + df.format(performance.get("accuracy")));
         sw.writeLine(sb.toString());
         sw.close();
+
     }
 
 

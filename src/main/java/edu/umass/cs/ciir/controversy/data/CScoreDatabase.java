@@ -19,10 +19,8 @@ public class CScoreDatabase {
     DiskMapReader reader;
     DiskMapReader revisedReader;
     boolean revise = false;
-    SimpleFileWriter logWriter;
-    public CScoreDatabase(boolean r, int networkOption, SimpleFileWriter logWriter_) throws IOException {
+    public CScoreDatabase(boolean r, int networkOption) throws IOException {
         reader = new DiskMapReader(DataPath.CSCORE);
-        logWriter = logWriter_;
         this.revise = r;
         if(this.revise) {
             if (networkOption == OutputControversyScores.CLIQUE_BASED_NETWORK)
@@ -44,7 +42,12 @@ public class CScoreDatabase {
 */
     }
 
+    public void close() throws IOException {
+        reader.close();
+        if(revisedReader != null)
+            revisedReader.close();
 
+    }
     public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
     throws IOException {
         Double finalScore = 0.0;
@@ -52,7 +55,7 @@ public class CScoreDatabase {
 
 
         if(wikidocs.size() < topK) {
-            logWriter.writeLine(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
+            System.out.println(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
             topK = wikidocs.size();
         }
         if(votingMethod == Aggregator.MAX) {

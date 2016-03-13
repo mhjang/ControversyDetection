@@ -18,9 +18,8 @@ import java.util.HashSet;
  */
 public class DScoreDatabase {
     HashSet<String> dscoreDB;
-    SimpleFileWriter logWriter;
     DiskMapReader reader;
-    public DScoreDatabase(SimpleFileWriter logWriter_) throws IOException {
+    public DScoreDatabase() throws IOException {
         dscoreDB = new HashSet<String>();
         reader = new DiskMapReader(DataPath.DSCORE);
     }
@@ -29,12 +28,15 @@ public class DScoreDatabase {
         else return false;
     }
 
+    public void close() throws IOException {
+        reader.close();
+    }
     public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
     throws IOException {
         Double finalScore = 0.0;
         String maxPage = null;
         if(wikidocs.size() < topK) {
-            logWriter.writeLine(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
+            System.out.println(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
             topK = wikidocs.size();
         }
 

@@ -20,6 +20,68 @@ import java.io.IOException;
  */
 public class GenerateParams {
     public static void main(String[] args) throws IOException {
+
+
+        /***
+         * ID	QueryMethod	Network
+         1	All	No
+         2	All	Clique
+         3	All	Pair
+         4	TF10	No
+         5	TF10	Clique
+         6	TF10	Pair
+         7	Tile	No
+         8	Tile	Clique
+         9	Tile	Pair
+         */
+
+        int i=1;
+        String dataset = "genweb";
+     //   String[] querygen = {"all", "tf10", "tile"};
+        String q = "tile";
+        int[] neighborK = {1, 5, 10, 15, 20};
+        boolean revised = false;
+    //    String[] networkConstruction = {"clique", "pair"};
+        String network = "clique";
+        String[] aggregation = {"max", "avg"};
+        String[] voting = {"C", "M", "D", "Majority", "AND", "D_CM"};
+        int mThreshold = 20000;
+        String cThreshold = "0.00418";
+        String[][] thresholds = {{"20000", "0.00418"}, {"40000", "0.17"}, {"84930","0.00418"}, {"2850000", "0.17"}};
+        int runId = 7;
+        // revised == false
+        for(int k : neighborK) {
+            for(String a: aggregation) {
+                for(String v: voting) {
+                    for(String[] t : thresholds) {
+                        SimpleFileWriter sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset + "/" + runId + "/trainParam/" + i + ".param");
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("{");
+                        sb.append(addJSonLine("id", i, true));
+                        sb.append(addJSonLine("dataset", dataset, true));
+                        sb.append(addJSonLine("querygen", q, true));
+                        sb.append(addJSonLine("k", k, true));
+                        sb.append(addJSonLine("revised", revised, true));
+                        if (revised)
+                            sb.append(addJSonLine("network", network, true));
+
+                        sb.append(addJSonLine("M_threshold", t[0], true));
+                        sb.append(addJSonLine("C_threshold", t[1], true));
+                        sb.append(addJSonLine("aggregation", a, true));
+                        sb.append(addJSonLine("voting", v, false));
+                        sb.append("}");
+                        sw.writeLine(sb.toString());
+                        sw.close();
+
+                        i++;
+                    }
+                    }
+
+            }
+        }
+
+
+/*
         int i=1;
         String dataset = "genweb";
         String[] querygen = {"all", "tf10", "tile"};
@@ -29,13 +91,14 @@ public class GenerateParams {
         String[] aggregation = {"max", "avg"};
         String[] voting = {"C", "M", "D", "Majority", "AND", "D_CM"};
 
+
         // revised == false
         for(int k : neighborK) {
             for(String a: aggregation) {
                 for(String v: voting) {
                     for(String q : querygen) {
                         revised = false;
-                        SimpleFileWriter sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset.charAt(0)  + i +  "_" + q + ".param");
+                        SimpleFileWriter sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset.charAt(0)  + i + ".param");
                         StringBuilder sb =  new StringBuilder();
                         sb.append("{");
                         sb.append(addJSonLine("id", i, true));
@@ -44,12 +107,16 @@ public class GenerateParams {
                         sb.append(addJSonLine("k", k, true));
                         sb.append(addJSonLine("revised", revised, true));
                         sb.append(addJSonLine("aggregation", a, true));
+                        sb.append(addJSonLine("M_threshold", mThreshold, true));
+                        sb.append(addJSonLine("C_threshold", cThreshold, true));
                         sb.append(addJSonLine("voting", v, false));
+
                         sb.append("}");
                         sw.writeLine(sb.toString());
                         sw.close();
+                        i++;
                         revised = true;
-                        sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset.charAt(0) + i +  "_" + q +  "_clique_revised.param");
+                        sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset.charAt(0)  + i + ".param");
                         sb =  new StringBuilder();
                         sb.append("{");
                         sb.append(addJSonLine("id", i, true));
@@ -59,12 +126,15 @@ public class GenerateParams {
                         sb.append(addJSonLine("revised", revised, true));
                         sb.append(addJSonLine("network", "clique", true));
                         sb.append(addJSonLine("aggregation", a, true));
+                        sb.append(addJSonLine("M_threshold", mThreshold, true));
+                        sb.append(addJSonLine("C_threshold", cThreshold, true));
                         sb.append(addJSonLine("voting", v, false));
                         sb.append("}");
                         sw.writeLine(sb.toString());
                         sw.close();
+                        i++;
+                        sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset.charAt(0)  + i +  ".param");
 
-                        sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset.charAt(0) + i +  "_" + q +  "_pair_revised.param");
                         sb =  new StringBuilder();
                         sb.append("{");
                         sb.append(addJSonLine("id", i, true));
@@ -74,6 +144,8 @@ public class GenerateParams {
                         sb.append(addJSonLine("revised", revised, true));
                         sb.append(addJSonLine("network", "pair", true));
                         sb.append(addJSonLine("aggregation", a, true));
+                        sb.append(addJSonLine("M_threshold", mThreshold, true));
+                        sb.append(addJSonLine("C_threshold", cThreshold, true));
                         sb.append(addJSonLine("voting", v, false));
                         sb.append("}");
                         sw.writeLine(sb.toString());
@@ -86,6 +158,7 @@ public class GenerateParams {
                 }
             }
         }
+        */
 
     }
 

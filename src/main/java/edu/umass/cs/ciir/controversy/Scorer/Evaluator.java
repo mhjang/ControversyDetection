@@ -134,6 +134,7 @@ public class Evaluator {
                 HashMap<String, String> info = result.get(docName);
 
                 // 1: Controversial   0: Non-controversial
+
                 if (Integer.parseInt(info.get("prediction")) == 0) // 0
                     prediction = false;
                 else
@@ -170,7 +171,7 @@ public class Evaluator {
             }
 
             System.out.println(tp + "\t" + tn + "\t" + fp + "\t" + fn);
-
+       //     if(tp == 0) return null;
             double recall = (double)(tp) / (double)(tp + fn);
             double precision = (double)(tp) / (double)(tp + fp);
             double specificity = (double)(tn) / (double)(tn + fn);
