@@ -1,5 +1,12 @@
 package edu.umass.cs.ciir.controversy.experiment;
 
+import edu.umass.cs.ciir.controversy.utils.SimpleFileWriter;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+
 /**
  * Created by mhjang on 2/9/16.
  */
@@ -64,6 +71,44 @@ public class GenWebTopicFiveFold {
         Feminism, IntensiveFarming, Cancer};
         public static String[] test = {BerlinWall, Cheese};
 
+    }
+
+    public static void main(String[] args) throws IOException {
+
+
+        PrintStream ps_console = System.out;
+
+        File file = new File("/home/mhjang/controversy_Data/datasets/generalweb300/experiments/fivefold/fold5/fold5.sh");
+        FileOutputStream fos = new FileOutputStream(file);
+
+        // Create new print stream for file.
+        PrintStream ps = new PrintStream(fos);
+
+        // Set file print stream.
+        System.setOut(ps);
+
+        System.out.print("declare -a dir=(\"");
+        int n = Fold5.train.length;
+        for (int i=0; i<n; i++) {
+            if(i!= n-1)
+                System.out.print(Fold5.train[i] + "\" \"");
+            else
+                System.out.print(Fold5.train[i] + "\") \n");
+        }
+        System.out.println("for i in \"${dir[@]}\"\ndo\ncp /home/mhjang/controversy_Data/" +
+                "datasets/generalweb300/queries/$i/* train/;\ndone");
+
+
+        System.out.print("declare -a dir=(\"");
+        n = Fold5.test.length;
+        for (int i=0; i<n; i++) {
+            if(i!= n-1)
+                System.out.print(Fold5.test[i] + "\" \"");
+            else
+                System.out.print(Fold5.test[i] + "\") \n");
+        }
+        System.out.println("for i in \"${dir[@]}\"\ndo\ncp /home/mhjang/controversy_Data/" +
+                "datasets/generalweb300/queries/$i/* test/;\ndone");
     }
 
 

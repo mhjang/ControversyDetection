@@ -10,6 +10,7 @@ import org.lemurproject.galago.utility.ByteUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by mhjang on 12/20/15.
@@ -48,18 +49,26 @@ public class CScoreDatabase {
             revisedReader.close();
 
     }
-    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
-    throws IOException {
+    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, ArrayList<String> wikidocs2,
+                             int votingMethod, int topK, int topK2) throws IOException {
         Double finalScore = 0.0;
         String maxPage = null;
 
 
+        List<String> list;
         if(wikidocs.size() < topK) {
             System.out.println(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
             topK = wikidocs.size();
         }
+
+        list  = wikidocs.subList(0, topK);
+
+        if(wikidocs2 != null) {
+
+            list.addAll(wikidocs2.subList(0, Math.min(topK2, wikidocs2.size())));
+        }
         if(votingMethod == Aggregator.MAX) {
-            for (String wiki : wikidocs.subList(0, topK)) {
+            for (String wiki : list) {
                 double score = getScore(wiki);
                 if(finalScore < score) {
                     finalScore = score;
@@ -69,12 +78,12 @@ public class CScoreDatabase {
             info.put("CScoreMaxPage", maxPage);
         }
         else if(votingMethod == Aggregator.AVG) {
-            for (String wiki : wikidocs.subList(0, topK)) {
+            for (String wiki : list) {
                 double score = getScore(wiki);
                 finalScore += score;
 
             }
-            finalScore /= (double)(topK);
+            finalScore /= (double)(list.size());
         }
         info.put("CScore", finalScore.toString());
 

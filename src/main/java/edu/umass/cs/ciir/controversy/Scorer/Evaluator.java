@@ -140,12 +140,16 @@ public class Evaluator {
                 else
                     prediction = true;
 
-                if (controveryGoldstandard.get(docName) >= 2.5)
+                if (controveryGoldstandard.get(docName) >= 2.5) {
                     truth = false;
+                    info.put("binary_rating", "0");
+                }
                 else {
                     truth = true;
                     numOfTruth++;
+                    info.put("binary_rating", "1");
                 }
+                info.put("raw_rating", controveryGoldstandard.get(docName).toString());
 
                 if(prediction) {
                     if(truth) tp++;

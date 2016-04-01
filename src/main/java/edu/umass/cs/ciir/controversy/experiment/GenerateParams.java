@@ -36,11 +36,11 @@ public class GenerateParams {
          */
 
         int i=1;
-        String dataset = "genweb";
-     //   String[] querygen = {"all", "tf10", "tile"};
-        String q = "tile";
+        String dataset = "clueweb";
+    //    String[] querygen = {"all", "tf10", "tile"};
+        String[] querygen = {"tile"};
         int[] neighborK = {1, 5, 10, 15, 20};
-        boolean revised = false;
+        boolean revised = true;
     //    String[] networkConstruction = {"clique", "pair"};
         String network = "clique";
         String[] aggregation = {"max", "avg"};
@@ -48,37 +48,43 @@ public class GenerateParams {
         int mThreshold = 20000;
         String cThreshold = "0.00418";
         String[][] thresholds = {{"20000", "0.00418"}, {"40000", "0.17"}, {"84930","0.00418"}, {"2850000", "0.17"}};
-        int runId = 7;
+        int runId = 12;
         // revised == false
-        for(int k : neighborK) {
-            for(String a: aggregation) {
-                for(String v: voting) {
-                    for(String[] t : thresholds) {
-                        SimpleFileWriter sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset + "/" + runId + "/trainParam/" + i + ".param");
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("{");
-                        sb.append(addJSonLine("id", i, true));
-                        sb.append(addJSonLine("dataset", dataset, true));
-                        sb.append(addJSonLine("querygen", q, true));
-                        sb.append(addJSonLine("k", k, true));
-                        sb.append(addJSonLine("revised", revised, true));
-                        if (revised)
-                            sb.append(addJSonLine("network", network, true));
+        int[] wikifier_k = {1, 5};
+        for(int k2 : wikifier_k) {
+            for (String q : querygen) {
+                for (int k : neighborK) {
+                    for (String a : aggregation) {
+                        for (String v : voting) {
+                            for (String[] t : thresholds) {
+                                SimpleFileWriter sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/clueweb/experiments/runs/" + runId + "/trainParam/" + i + ".param");
+                                //   SimpleFileWriter sw = new SimpleFileWriter("/home/mhjang/controversy_Data/datasets/expresults/params/" + dataset + "/" + runId + "/trainParam/" + i + ".param");
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("{");
+                                sb.append(addJSonLine("id", i, true));
+                                sb.append(addJSonLine("dataset", dataset, true));
+                                sb.append(addJSonLine("querygen", q, true));
+                                sb.append(addJSonLine("k", k, true));
+                                sb.append(addJSonLine("querygen2", "wikifier", true));
+                                sb.append(addJSonLine("k2", k2, true));
+                                sb.append(addJSonLine("revised", revised, true));
+                                if (revised)
+                                    sb.append(addJSonLine("network", network, true));
+                                sb.append(addJSonLine("M_threshold", t[0], true));
+                                sb.append(addJSonLine("C_threshold", t[1], true));
+                                sb.append(addJSonLine("aggregation", a, true));
+                                sb.append(addJSonLine("voting", v, false));
+                                sb.append("}");
+                                sw.writeLine(sb.toString());
+                                sw.close();
 
-                        sb.append(addJSonLine("M_threshold", t[0], true));
-                        sb.append(addJSonLine("C_threshold", t[1], true));
-                        sb.append(addJSonLine("aggregation", a, true));
-                        sb.append(addJSonLine("voting", v, false));
-                        sb.append("}");
-                        sw.writeLine(sb.toString());
-                        sw.close();
+                                i++;
+                            }
+                        }
 
-                        i++;
                     }
-                    }
-
+                }
             }
-        }
 
 
 /*
@@ -159,6 +165,7 @@ public class GenerateParams {
             }
         }
         */
+        }
 
     }
 

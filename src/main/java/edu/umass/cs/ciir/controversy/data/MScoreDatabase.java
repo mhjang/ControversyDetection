@@ -10,6 +10,7 @@ import org.lemurproject.galago.utility.ByteUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by mhjang on 12/20/15.
@@ -51,7 +52,8 @@ public class MScoreDatabase {
             revisedReader.close();
     }
 
-    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
+    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, ArrayList<String> wikidocs2,
+                             int votingMethod, int topK, int topK2)
     throws IOException {
         Double finalScore = 0.0;
 
@@ -62,8 +64,17 @@ public class MScoreDatabase {
             topK = wikidocs.size();
         }
 
+        List<String> list;
+
+        list =  wikidocs.subList(0, topK);
+
+        if(wikidocs2 != null) {
+            list.addAll(wikidocs2.subList(0, Math.min(topK2, wikidocs2.size())));
+
+        }
+
         if(votingMethod == Aggregator.MAX) {
-            for (String wiki : wikidocs.subList(0, topK)) {
+            for (String wiki : list) {
                 double score = getScore(wiki);
                 if(finalScore < score) {
                     finalScore = score;
@@ -73,11 +84,11 @@ public class MScoreDatabase {
             info.put("MScoreMaxPage", maxPage);
         }
         else { // votingMethod == Aggregator.AVG
-            for (String wiki : wikidocs.subList(0, topK)) {
+            for (String wiki : list) {
                 double score = getScore(wiki);
                 finalScore += score;
             }
-            finalScore /= (double)(wikidocs.size());
+            finalScore /= (double)(list.size());
         }
 
         info.put("MScore", finalScore.toString());

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by mhjang on 1/8/16.
@@ -31,22 +32,46 @@ public class DScoreDatabase {
     public void close() throws IOException {
         reader.close();
     }
-    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, int votingMethod, int topK)
+    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, ArrayList<String> wikidocs2, int votingMethod, int topK, int topK2)
     throws IOException {
-        Double finalScore = 0.0;
-        String maxPage = null;
+        boolean useSecondList = false;
         if(wikidocs.size() < topK) {
             System.out.println(info.get("qid") + " does not have " + topK + " neighbors, but only " + wikidocs.size() + " docs.");
             topK = wikidocs.size();
         }
 
+        List<String> list;
+
+        list =  wikidocs.subList(0, topK);
+
+        if(wikidocs2 != null) {
+            list.addAll(wikidocs2.subList(0, Math.min(topK2, wikidocs2.size())));
+        }
+
+
+
+
         if(votingMethod == Aggregator.MAX) {
-            for (String wiki : wikidocs.subList(0, topK)) {
+            for (String wiki : list) {
                 if (isDisputed(wiki)) {
                     info.put("DScore", "1.0");
                     return;
                 }
             }
+
+        }
+        else {
+            int count = 0;
+
+            for (String wiki : list) {
+                if (isDisputed(wiki)) {
+                    count++;
+                }
+            }
+
+            if((double)(count)/(double)(list.size()) >= 0.5)
+                info.put("DScore", "1.0");
+
         }
 
         // implement avg

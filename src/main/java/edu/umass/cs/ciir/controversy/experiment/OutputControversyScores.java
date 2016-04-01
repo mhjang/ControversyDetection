@@ -25,12 +25,12 @@ public class OutputControversyScores {
     DScoreDatabase dsd;
     AnnotationDatabase and;
 
-    String datasetDir, queryDir, retrievedDir, goldstandardDir;
+    String datasetDir, queryDir, retrievedDir, retrievedDir2, goldstandardDir;
 
     String runid;
-    String querymethod;
+    String querymethod, querymethod2;
     String dataset;
-    int neighborK;
+    int neighborK, neighborK2 = 0;
     boolean revised;
     double thresold_C;
     int threshold_M;
@@ -41,6 +41,9 @@ public class OutputControversyScores {
     int runextension;
     String voting;
 
+    String resultDir;
+    int fold;
+
     public static int CLIQUE_BASED_NETWORK = 1;
     public static int PAIR_BASED_NETWORK = 2;
 
@@ -48,16 +51,22 @@ public class OutputControversyScores {
 
     HashMap<String, HashMap<String, String>> result;
     HashMap<String, ArrayList<String>> retrieved;
+    HashMap<String, ArrayList<String>> retrieved2;
     VotingClassifer votingClassifier;
     Evaluator eval;
     String[] topics;
 
+    boolean isTrain = true;
     String paramFile;
+
+    boolean useWikifier = false;
+    int wikifier_k = 0;
 
     public static class QueryMethod {
         public static String ALLQUERY = "all";
         public static String TIlEQUERY = "tile";
         public static String TF10QUERY = "tf10";
+        public static String WIKIFIER = "wikifier";
     }
 
 
@@ -98,7 +107,7 @@ public class OutputControversyScores {
         public static String IntensiveFarming = "intensive_farming";
         public static String BerlinWall = "berlin_wall";
         public static String[] all = {GlobalWarming, NuclearPower, GayMarriage, VideoGame, NativeAmericans, AntiAmericanism, Feminism, IntensiveFarming, BerlinWall};
- 
+
     }
 
     public static class NonControversialTopic {
@@ -114,23 +123,44 @@ public class OutputControversyScores {
     public static void main(String[] args) throws IOException {
 
 
-        String dataset = "CLUEWEB";
-        String mode = "testParam"; // or "testParam"
+        /******** User-set parameters ***************/
+        String dataset = "GENWEB";
+        String learningMode = "testParam"; // or "testParam"
+        int runExtension = 2014;
+        /**********************************************/
+
+        String baseDir = null;
+        boolean isTrain = true;
+        String outputMode = null;
+
+        if (learningMode.equals("testParam")) {
+            isTrain = false;
+            outputMode = "testResults";
+        } else
+            outputMode = "trainResults";
 
         String[] expDataset;
-        if(dataset.equals("CLUEWEB"))
+        if (dataset.equals("CLUEWEB")) {
             expDataset = DataPath.CLUEWEB_5FOLD;
-        else
+            baseDir = DataPath.CLUEWEB;
+        } else {
             expDataset = DataPath.GENWEB_5FOLD;
+            baseDir = DataPath.GENWEB;
+        }
 
-        for (int k = 1; k <= 5; k++) {
-            for (int i = 1; i <= 9; i++) {
-                String baseDir = expDataset[k-1];
-                String dir = baseDir + "params/" + i + "/" + mode;
-                DirectoryManager dm = new DirectoryManager(dir);
+
+        for (int i = 1; i <= 9; i++) {
+            String paramDir = baseDir + "experiments/runs/" + i + "/" + learningMode;   // retrieve ith run. Learning mode determines whether it's test or train mode
+
+            for (int k = 1; k <= 5; k++) {
+                String resultDir = baseDir + "experiments/runs/" + i + "/results/fold" + k + "/" + outputMode;
+                if (!isTrain)
+                    paramDir = resultDir;
+                String queryBaseDir = expDataset[k - 1]; // retrieve kth fold
+                DirectoryManager dm = new DirectoryManager(paramDir);
                 for (String paramFile : dm.getFilePathList()) {
                     if (paramFile.endsWith(".param")) {
-                        OutputControversyScores classifier = new OutputControversyScores(baseDir, paramFile, false, k);
+                        OutputControversyScores classifier = new OutputControversyScores(queryBaseDir, resultDir, paramFile, isTrain, k, runExtension);
                         classifier.run();
                     }
                 }
@@ -138,100 +168,79 @@ public class OutputControversyScores {
         }
     }
 
-    public OutputControversyScores(String dataFoldDir, String p, boolean isTrain, int runset) throws IOException {
-        initialize(dataFoldDir, p, isTrain, runset);
+    public OutputControversyScores(String dataFoldDir, String resultDir, String p, boolean isTrain, int runset, int runExtension) throws IOException {
+        initialize(dataFoldDir, resultDir, p, isTrain, runset, runExtension);
 
     }
-    private void initialize(String dataFoldDir, String paramFile, boolean isTrain, int runset) throws IOException {
+
+    private void initialize(String dataFoldDir, String resultDir, String paramFile, boolean isTrain, int runset, int runExtension) throws IOException {
 
         Parameters p = Parameters.parseFile(paramFile);
         System.out.println(paramFile);
         this.paramFile = paramFile;
+        this.resultDir = resultDir;
         runid = p.get("id", "0");
+        this.fold = runset;
 
-
+        this.isTrain = isTrain;
 
         /******************** Dataset ***********************/
 
-        dataset = "clueweb";
-     //   dataset = p.get("dataset", "clueweb");
+        // dataset = "clueweb";
+        dataset = p.get("dataset", "null");
 
-        if(dataset.equals("clueweb")) {
+        if (dataset.equals("clueweb")) {
             datasetDir = DataPath.CLUEWEB;
-            if(isTrain) {
-                queryDir = dataFoldDir + "train/";
-            }
-            else {
-                queryDir = dataFoldDir + "test/";
-            }
-
         }
-        else if(dataset.equals("genweb")) {
+        else if(dataset.equals("genweb")){
             datasetDir = DataPath.GENWEB;
-            queryDir = datasetDir + DataPath.GENWEB_QUERY;
-            if(isTrain) {
-                if (runset == 1) {
-                    topics = GenWebTopicFiveFold.Fold1.train;
-              //      topics = new String[]{"anti_americanism"};
-                }
-                if (runset == 2)
-                    topics = GenWebTopicFiveFold.Fold2.train;
-                if (runset == 3)
-                    topics = GenWebTopicFiveFold.Fold3.train;
-                if (runset == 4)
-                    topics = GenWebTopicFiveFold.Fold4.train;
-                if (runset == 5)
-                    topics = GenWebTopicFiveFold.Fold5.train;
-            }
-            else{
-                if (runset == 1)
-                    topics = GenWebTopicFiveFold.Fold1.test;
-                if (runset == 2)
-                    topics = GenWebTopicFiveFold.Fold2.test;
-                if (runset == 3)
-                    topics = GenWebTopicFiveFold.Fold3.test;
-                if (runset == 4)
-                    topics = GenWebTopicFiveFold.Fold4.test;
-                if (runset == 5)
-                    topics = GenWebTopicFiveFold.Fold5.test;
-            }
-
-     //       topics = new String[]{ControversialTopic.Feminism, NonControversialTopic.AnneFrank};
-     //       topics = (String[]) ArrayUtils.addAll(ControversialTopic.all, NonControversialTopic.all);
-     //       topics = TestTopics.all;
         }
         else {
-            System.out.println("Error! Wrong dataset parameter");
-            System.out.println(dataset);
+            System.err.print("Wrong dataset!");
             return;
         }
+
+
+        if (isTrain)
+            queryDir = dataFoldDir + "train/";
+        else
+            queryDir = dataFoldDir + "test/";
+
+
+
         eval = new Evaluator(datasetDir + DataPath.GOLDSTANDARD);
 
         /**************** Query Method ******************/
 
         querymethod = p.get("querygen", "tf10");
 
-        if(querymethod.equals(QueryMethod.ALLQUERY))
+        if (querymethod.equals(QueryMethod.ALLQUERY))
             retrievedDir = datasetDir + DataPath.ALLQUERY;
-        else if(querymethod.equals(QueryMethod.TF10QUERY))
+        else if (querymethod.equals(QueryMethod.TF10QUERY))
             retrievedDir = datasetDir + DataPath.TF10QUERY;
-        else if(querymethod.equals(QueryMethod.TIlEQUERY))
+        else if (querymethod.equals(QueryMethod.TIlEQUERY))
             retrievedDir = datasetDir + DataPath.TILEQUERY;
+        else if (querymethod.equals(QueryMethod.WIKIFIER))
+            retrievedDir = datasetDir + DataPath.WIKIFIERQUERY;
         else {
             System.out.println("Error! Wrong querymethod parameter");
             return;
         }
 
-
+        querymethod2 = p.get("querygen2", "null");
+        if(!querymethod2.equals("null")) {
+            retrievedDir2 = datasetDir + DataPath.WIKIFIERQUERY;
+        }
         /********** How many k neighbors do we use? *******/
 
-        neighborK = Integer.parseInt(p.get("k",  "20"));
+        neighborK = Integer.parseInt(p.get("k", "20"));
+        neighborK2 = Integer.parseInt(p.get("k2", "0"));
 
         /**************** Aggregation ******************/
         aggregation = p.get("aggregation", "max");
-        if(aggregation.equals("max"))
+        if (aggregation.equals("max"))
             aggregationOption = Aggregator.MAX;
-        else if(aggregation.equals("avg"))
+        else if (aggregation.equals("avg"))
             aggregationOption = Aggregator.AVG;
 
 
@@ -239,17 +248,17 @@ public class OutputControversyScores {
         thresold_C = Double.parseDouble(p.get("C_threshold", "0.00418"));
         threshold_M = Integer.parseInt(p.get("M_threshold", "20000"));
 
-        runextension = 1;
+        this.runextension = runExtension;
 
         /**************** Do we use revised score? ***********/
         revised = p.get("revised", false);
-        if(revised) {
+        if (revised) {
             network = p.get("network", "clique");
-            if(network.equals("clique"))
+            if (network.equals("clique"))
                 networkOption = CLIQUE_BASED_NETWORK;
-            else if(network.equals("pair"))
+            else if (network.equals("pair"))
                 networkOption = PAIR_BASED_NETWORK;
-            else{
+            else {
                 System.out.println("Error! Wrong network option!");
                 return;
             }
@@ -258,15 +267,15 @@ public class OutputControversyScores {
 
         /*************** Voting Option ***************/
         voting = p.get("voting", "C"); // C, M, D, majority, AND, OR, D_CM
-        if(voting == "C")
+        if (voting == "C")
             votingOption = VotingParameter.ISOLATION_C;
-        else if(voting.equals("M"))
+        else if (voting.equals("M"))
             votingOption = VotingParameter.ISOLATION_M;
-        else if(voting.equals("D"))
+        else if (voting.equals("D"))
             votingOption = VotingParameter.ISOLATION_D;
-        else if(voting.equals("Majority"))
+        else if (voting.equals("Majority"))
             votingOption = VotingParameter.MAJORITY;
-        else if(voting.equals("D_CM"))
+        else if (voting.equals("D_CM"))
             votingOption = VotingParameter.D_CM;
         VotingParameter votingParam = new VotingParameter.Builder().setVotingMethod(votingOption)
                 .setMThreshold(threshold_M).setCScoreThreshold(thresold_C).build();
@@ -288,7 +297,6 @@ public class OutputControversyScores {
 
     public void run() throws IOException {
 
-        SimpleFileWriter logWriter = new SimpleFileWriter("error.log");
         csd = new CScoreDatabase(revised, networkOption);
         msd = new MScoreDatabase(revised, networkOption);
         dsd = new DScoreDatabase();
@@ -309,43 +317,66 @@ public class OutputControversyScores {
         }
         sr2.close();
 
-        if (dataset.equals("genweb")) {
-            for (String topic : topics) {
-                DirectoryManager dm = new DirectoryManager(queryDir + topic);
-                for (String queryId : dm.getFileNameList()) {
-                    detectControversy(queryId, neighborK);
-
-                }
+        if(retrievedDir2 != null) {
+            retrieved2 = new HashMap<String, ArrayList<String>>();
+            sr2 = new SimpleFileReader(retrievedDir2);
+            while (sr2.hasMoreLines()) {
+                String line = sr2.readLine();
+                String[] tokens = line.split("\t");
+                String queryId = tokens[0];
+                if (!retrieved2.containsKey(queryId))
+                    retrieved2.put(queryId, new ArrayList<String>());
+                retrieved2.get(queryId).add(tokens[1].toLowerCase());
             }
-        } else {
-            DirectoryManager dm = new DirectoryManager(queryDir);
-            for (String queryId : dm.getFileNameList()) {
-                detectControversy(queryId, neighborK);
-            }
+            sr2.close();
         }
-        logWriter.close();
+
+
+        System.out.println(queryDir);
+        DirectoryManager dm = new DirectoryManager(queryDir);
+        for (String queryId : dm.getFileNameList()) {
+                detectControversy(queryId);
+        }
+
 
         boolean debugMode = false;
         HashMap<String, Double> performance = eval.binaryAutomaticEvaluate(result, debugMode);
-        SimpleFileWriter sw2 = new SimpleFileWriter(paramFile.replace(".param", ".output"));
-        ArrayList<String> pageList = new ArrayList<String>(result.keySet());
-        Collections.sort(pageList, ALPHABETICAL_ORDER);
-        for (String docName : pageList) {
+
+
+        if (!isTrain) {
+            SimpleFileWriter sw2 = new SimpleFileWriter(paramFile.replace(".param", ".output"));
+            SimpleFileWriter sw3 = new SimpleFileWriter(paramFile.replace(".param", ".error"));
+
+            ArrayList<String> pageList = new ArrayList<String>(result.keySet());
+            Collections.sort(pageList, ALPHABETICAL_ORDER);
+            for (String docName : pageList) {
                 HashMap<String, String> info = result.get(docName);
                 // 1: Controversial   0: Non-controversial
-                sw2.writeLine(docName + "\t" + info.get("prediction"));
+                String prediction = info.get("prediction");
+                String binaryanswer = info.get("binary_rating");
+                String rawanswer = info.get("raw_rating");
+                /* Warning: /home/mhjang/controversy_Data/datasets/clueweb/experiments/runs/compSignifiance.sh depends on this output. **/
+                sw2.writeLine(docName + "\t" + prediction + "\t" + binaryanswer);
+
+                if (!prediction.equals(binaryanswer))
+                    sw3.writeLine(docName + "\t" + prediction + "\t" + binaryanswer + "\t" + rawanswer);
+
+
+            }
+            sw2.close();
+            sw3.close();
         }
-        sw2.close();
 
         csd.close();
         dsd.close();
         msd.close();
-   //     if(performance == null) return;
+        //     if(performance == null) return;
 
-        SimpleFileWriter sw = new SimpleFileWriter(paramFile.replace(".param", ".result")  + runextension);
+        String paramFileName = paramFile.substring(paramFile.lastIndexOf("/") + 1, paramFile.length()).replace(".param", ".result") + runextension;
+        SimpleFileWriter sw = new SimpleFileWriter(resultDir + "/" + paramFileName);
         StringBuilder sb = new StringBuilder();
         DecimalFormat df = new DecimalFormat("0.0000");
-        if(!revised)
+        if (!revised)
             network = "N/A";
         sb.append(runid + "\t" + querymethod + "\t" + neighborK + "\t" + revised + "\t" + network + "\t" + aggregation
                 + "\t" + thresold_C + "\t" + threshold_M + "\t" + voting + "\t" + df.format(performance.get("precision")) + "\t"
@@ -357,13 +388,20 @@ public class OutputControversyScores {
     }
 
 
-    private void detectControversy(String queryId, int k) throws IOException {
+
+
+    private void detectControversy(String queryId) throws IOException {
         if(!retrieved.containsKey(queryId)) {
             System.out.println("Error: " +  queryId + " doesn't have the retrieval result");
             return;
         }
 
         ArrayList<String> rankedDoc = retrieved.get(queryId);
+        ArrayList<String> rankedDoc2 = null;
+        if(retrieved2 != null) {
+            if (retrieved2.containsKey(queryId))
+                rankedDoc2 = retrieved2.get(queryId);
+        }
         // Oracle Experiment
         /**
           ArrayList<String> goldDoc = wikiDB.getRelevantPages(queryId, 2.5);
@@ -374,9 +412,9 @@ public class OutputControversyScores {
 
 
 
-        csd.computeScore(info, rankedDoc, aggregationOption, neighborK);
-        msd.computeScore(info, rankedDoc, aggregationOption, neighborK);
-        dsd.computeScore(info, rankedDoc, aggregationOption, neighborK);
+        csd.computeScore(info, rankedDoc, rankedDoc2, aggregationOption, neighborK, neighborK2);
+        msd.computeScore(info, rankedDoc, rankedDoc2, aggregationOption, neighborK, neighborK2);
+        dsd.computeScore(info, rankedDoc, rankedDoc2, aggregationOption, neighborK, neighborK2);
         votingClassifier.classify(info);
 
         // print heading
