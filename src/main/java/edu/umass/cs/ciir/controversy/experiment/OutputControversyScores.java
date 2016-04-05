@@ -178,14 +178,9 @@ public class OutputControversyScores {
             return;
         }
 
-        querymethod2 = p.get("querygen2", "null");
-        if(!querymethod2.equals("null")) {
-            retrievedDir2 = datasetDir + DataPath.WIKIFIERQUERY;
-        }
         /********** How many k neighbors do we use? *******/
 
         neighborK = Integer.parseInt(p.get("k", "20"));
-        neighborK2 = Integer.parseInt(p.get("k2", "0"));
 
         /**************** Aggregation ******************/
         aggregation = p.get("aggregation", "max");
@@ -363,9 +358,9 @@ public class OutputControversyScores {
 
 
 
-        csd.computeScore(info, rankedDoc, rankedDoc2, aggregationOption, neighborK, neighborK2);
-        msd.computeScore(info, rankedDoc, rankedDoc2, aggregationOption, neighborK, neighborK2);
-        dsd.computeScore(info, rankedDoc, rankedDoc2, aggregationOption, neighborK, neighborK2);
+        csd.computeScore(info, rankedDoc, aggregationOption, neighborK);
+        msd.computeScore(info, rankedDoc, aggregationOption, neighborK);
+        dsd.computeScore(info, rankedDoc, aggregationOption, neighborK);
         votingClassifier.classify(info);
 
         // print heading

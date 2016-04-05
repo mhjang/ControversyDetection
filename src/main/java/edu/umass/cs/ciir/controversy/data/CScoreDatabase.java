@@ -49,8 +49,8 @@ public class CScoreDatabase {
             revisedReader.close();
 
     }
-    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs, ArrayList<String> wikidocs2,
-                             int votingMethod, int topK, int topK2) throws IOException {
+    public void computeScore(HashMap<String, String> info, ArrayList<String> wikidocs,
+                             int votingMethod, int topK) throws IOException {
         Double finalScore = 0.0;
         String maxPage = null;
 
@@ -63,10 +63,6 @@ public class CScoreDatabase {
 
         list  = wikidocs.subList(0, topK);
 
-        if(wikidocs2 != null) {
-
-            list.addAll(wikidocs2.subList(0, Math.min(topK2, wikidocs2.size())));
-        }
         if(votingMethod == Aggregator.MAX) {
             for (String wiki : list) {
                 double score = getScore(wiki);
