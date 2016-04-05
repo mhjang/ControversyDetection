@@ -70,55 +70,6 @@ public class OutputControversyScores {
     }
 
 
-    public static class TrainingTopics {
-        public static String GlobalWarming = "global_warming";
-        public static String NuclearPower = "nuclear_power";
-        public static String GayMarriage = "gay_marriage";
-        public static String VideoGame = "video_game";
-        public static String MedievalCuisine = "medieval_cusine";
-        public static String SteveJobs = "steve_jobs";
-        public static String Uranium = "uranium";
-        public static String[] all = {GlobalWarming, NuclearPower, GayMarriage, VideoGame, MedievalCuisine, SteveJobs, Uranium};
-
-    }
-
-    public static class TestTopics {
-        public static String NativeAmericans = "native_americans";
-        public static String AntiAmericanism = "anti_americanism";
-        public static String Feminism = "feminism";
-        public static String IntensiveFarming = "intensive_farming";
-        public static String BerlinWall = "berlin_wall";
-        public static String AnneFrank = "anne_frank";
-        public static String Cancer = "cancer";
-        public static String Cheese = "cheese";
-
-        public static String[] all = {NativeAmericans, AntiAmericanism, Feminism, IntensiveFarming, BerlinWall, AnneFrank, Cancer, Cheese};
-
-    }
-
-    public static class ControversialTopic {
-        public static String GlobalWarming = "global_warming";
-        public static String NuclearPower = "nuclear_power";
-        public static String GayMarriage = "gay_marriage";
-        public static String VideoGame = "video_game";
-        public static String NativeAmericans = "native_americans";
-        public static String AntiAmericanism = "anti_americanism";
-        public static String Feminism = "feminism";
-        public static String IntensiveFarming = "intensive_farming";
-        public static String BerlinWall = "berlin_wall";
-        public static String[] all = {GlobalWarming, NuclearPower, GayMarriage, VideoGame, NativeAmericans, AntiAmericanism, Feminism, IntensiveFarming, BerlinWall};
-
-    }
-
-    public static class NonControversialTopic {
-        public static String MedievalCuisine = "medieval_cusine";
-        public static String SteveJobs = "steve_jobs";
-        public static String Uranium = "uranium";
-        public static String AnneFrank = "anne_frank";
-        public static String Cancer = "cancer";
-        public static String Cheese = "cheese";
-        public static String[] all = {MedievalCuisine, SteveJobs, Uranium, AnneFrank, Cancer, Cheese};
-    }
 
     public static void main(String[] args) throws IOException {
 
